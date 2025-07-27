@@ -5,23 +5,41 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 // Register
+// Register
 router.post("/register", async (req, res) => {
   try {
+    console.log("📥 Incoming Register Data:", req.body);
+
     const { username, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ msg: "User already exists" });
+    // 🔍 Check for existing email or username
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }]
+    });
+
+    if (existingUser) {
+      const duplicateField = existingUser.email === email ? "Email" : "Username";
+      return res.status(400).json({ msg: `${duplicateField} already exists` });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, email, password: hashedPassword });
+
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+    });
 
     await newUser.save();
 
     res.status(201).json({ msg: "User registered successfully" });
+
   } catch (err) {
-    res.status(500).json({ msg: "Server error", error: err.message });
+    console.error("❌ Registration Error:", err);
+    res.status(500).json({ msg: "Server error" });
   }
 });
+
 
 // Login
 router.post("/login", async (req, res) => {

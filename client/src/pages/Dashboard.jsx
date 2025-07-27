@@ -3,13 +3,11 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
-  const { user, setUser } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext) || { username: "Guest" }; // ✅ use logout from context
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
+    logout(); // ✅ this handles clearing user + localStorage
     navigate("/");
   };
 

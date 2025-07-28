@@ -10,20 +10,28 @@ const Home = () => {
           Personalized, AI‑Powered Learning Roadmaps
         </h1>
         <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-          Tell us your goal, your level, and your time. SkillBuilder creates a structured, trackable plan—with summaries, quizzes, and an AI mentor.
+          Tell us your goal, your level, and your time. SkillBuilder creates a
+          structured, trackable plan—with summaries, quizzes, and an AI mentor.
         </p>
         <div className="mt-8 flex items-center justify-center gap-4">
           <Link
-            to="/register"
+            to="/register" // <-- changed from "/register"
             className="px-6 py-3 rounded bg-blue-600 text-white hover:bg-blue-700"
           >
             Get Started
           </Link>
+          <Link
+            to="/skill-selection"
+            className="px-6 py-3 rounded bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Create your roadmap
+          </Link>
+
           <a
             href="#how-it-works"
             className="px-6 py-3 rounded border border-gray-300 hover:bg-gray-50"
           >
-          See how it works
+            See how it works
           </a>
         </div>
       </section>

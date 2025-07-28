@@ -7,6 +7,8 @@ import Home from './pages/Home';
 // import PrivateRoute from './components/PrivateRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import SkillSelection from "./pages/SkillSelection"; 
+import Roadmap from "./pages/Roadmap";
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/skill-selection" element={<SkillSelection />} /> 
+          <Route path="/roadmap" element={<Roadmap />} />
         </Routes>
       </div>
       <Footer />

@@ -2,12 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const Roadmap = () => {
-  const location = useLocation();
+  const { state } = useLocation();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [roadmap, setRoadmap] = useState(null);
 
-  const { goal, level, time } = location.state || {};
+  const [loading, setLoading] = useState(true);
+  const [roadmap, setRoadmap] = useState({});
+  const [error, setError] = useState(null);
+
+  const goal = state?.goal;
+  const level = state?.level;
+  const time = state?.time;
 
   useEffect(() => {
     if (!goal || !level || !time) {
@@ -17,19 +21,24 @@ const Roadmap = () => {
 
     const fetchRoadmap = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/generate-roadmap", {
+        const res = await fetch("http://localhost:5000/api/generate/generate-roadmap", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ goal, level, timePerDay: time }),
         });
 
-        const data = await response.json();
-        console.log("Fetched roadmap:", data);
+        const data = await res.json();
+        console.log("🎯 AI Raw Response:", data);
 
-        setRoadmap(data.roadmap || {});
-        setLoading(false);
+        if (data?.roadmap?.weeks || data?.roadmap?.raw) {
+          setRoadmap(data.roadmap);
+        } else {
+          setError("Received invalid roadmap structure.");
+        }
       } catch (err) {
-        console.error("Error fetching roadmap:", err);
+        console.error("❌ API Error:", err);
+        setError("Failed to generate roadmap.");
+      } finally {
         setLoading(false);
       }
     };
@@ -46,36 +55,54 @@ const Roadmap = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="max-w-2xl mx-auto p-6 mt-10 text-center text-red-600">
+        {error}
+      </div>
+    );
+  }
+
+  if (roadmap.raw) {
+    return (
+      <pre className="whitespace-pre-wrap max-w-4xl mx-auto p-6 bg-white shadow rounded">
+        {roadmap.raw}
+      </pre>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold mb-4">{roadmap.title || "Your Learning Roadmap"}</h1>
-      <p className="text-gray-600 mb-8">{roadmap.summary || "Here's your personalized learning plan."}</p>
+      <p className="text-gray-600 mb-8">{roadmap.summary || ""}</p>
 
-      {Array.isArray(roadmap.weeks) && roadmap.weeks.map((week, idx) => (
-        <div key={idx} className="mb-6 p-6 border rounded shadow-sm bg-white">
-          <h2 className="text-xl font-semibold mb-2">{week.title}</h2>
-          {week.objectives && (
-            <p className="text-gray-700">
-              <strong>Objectives:</strong> {week.objectives.join(", ")}
-            </p>
-          )}
-          {week.topics && (
-            <p className="text-gray-700">
-              <strong>Topics:</strong> {week.topics.join(", ")}
-            </p>
-          )}
-          {week.practice && week.practice.length > 0 && (
-            <p className="text-gray-700">
-              <strong>Practice:</strong> {week.practice.join(", ")}
-            </p>
-          )}
-        </div>
-      ))}
+      {Array.isArray(roadmap.weeks) && roadmap.weeks.length > 0 ? (
+        roadmap.weeks.map((week, idx) => (
+          <div key={idx} className="mb-6 p-6 border rounded shadow-sm bg-white">
+            <h2 className="text-xl font-semibold mb-2">{week.title}</h2>
 
-      {/* fallback if weeks not available */}
-      {!Array.isArray(roadmap.weeks) && (
-        <div className="text-center text-red-500 font-medium">
-          Oops! Roadmap format invalid. Please try again or check the backend response.
+            {week.objectives?.length > 0 && (
+              <p className="text-gray-700">
+                <strong>Objectives:</strong> {week.objectives.join(", ")}
+              </p>
+            )}
+
+            {week.topics?.length > 0 && (
+              <p className="text-gray-700">
+                <strong>Topics:</strong> {week.topics.join(", ")}
+              </p>
+            )}
+
+            {week.practice?.length > 0 && (
+              <p className="text-gray-700">
+                <strong>Practice:</strong> {week.practice.join(", ")}
+              </p>
+            )}
+          </div>
+        ))
+      ) : (
+        <div className="text-center text-gray-500">
+          No weeks found in the roadmap.
         </div>
       )}
     </div>

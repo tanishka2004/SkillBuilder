@@ -1,8 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+require("dotenv").config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// ✅ Safe dynamic fetch setup (works in Node.js 18+ and older)
+let _fetch = typeof fetch === "function" ? fetch : null;
+if (!_fetch) {
+  _fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
+}
 
 router.post("/generate-roadmap", async (req, res) => {
   const { goal, level, timePerDay } = req.body;
@@ -19,8 +23,7 @@ Break it into weekly modules. For each week include:
 - Learning objectives
 - Topics
 - (Optional) practice/project ideas
-Return the response as clean JSON in this format:
-
+Return the response as clean JSON like:
 {
   "title": "...",
   "summary": "...",
@@ -36,10 +39,25 @@ Return the response as clean JSON in this format:
 `;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const response = await _fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/text-bison-001:generateText?key=" +
+        process.env.GEMINI_API_KEY,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: {
+            text: prompt,
+          },
+        }),
+      }
+    );
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const data = await response.json();
+
+    const text = data?.candidates?.[0]?.output ?? "";
 
     let roadmap;
     try {
@@ -49,8 +67,8 @@ Return the response as clean JSON in this format:
     }
 
     res.json({ roadmap });
-  } catch (error) {
-    console.error("Gemini Error:", error.message);
+  } catch (err) {
+    console.error("Gemini Error:", err);
     res.status(500).json({ msg: "Failed to generate roadmap" });
   }
 });

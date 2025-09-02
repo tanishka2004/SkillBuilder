@@ -7,6 +7,7 @@ const Roadmap = () => {
 
   const [loading, setLoading] = useState(true);
   const [roadmap, setRoadmap] = useState({});
+  const [rawOutput, setRawOutput] = useState("");
   const [error, setError] = useState(null);
 
   const goal = state?.goal;
@@ -28,13 +29,15 @@ const Roadmap = () => {
         });
 
         const data = await res.json();
-        console.log("🎯 AI Raw Response:", data);
+        console.log("🎯 Gemini Raw:", data);
 
-        if (data?.roadmap?.weeks || data?.roadmap?.raw) {
-          setRoadmap(data.roadmap);
-        } else {
-          setError("Received invalid roadmap structure.");
-        }
+        if (data?.roadmap?.weeks) {
+  setRoadmap(data.roadmap);
+} else if (data?.roadmap?.raw) {
+  setRawOutput(typeof data.roadmap.raw === "string" ? data.roadmap.raw : JSON.stringify(data.roadmap.raw, null, 2));
+} else {
+  setError("❌ Roadmap not generated. Check server logs.");
+}
       } catch (err) {
         console.error("❌ API Error:", err);
         setError("Failed to generate roadmap.");
@@ -55,19 +58,22 @@ const Roadmap = () => {
     );
   }
 
+  if (error && rawOutput) {
+    return (
+      <div className="max-w-4xl mx-auto p-6 mt-10">
+        <p className="text-red-600 mb-4">{error}</p>
+        <pre className="whitespace-pre-wrap bg-gray-100 p-4 rounded overflow-x-auto">
+          {rawOutput}
+        </pre>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="max-w-2xl mx-auto p-6 mt-10 text-center text-red-600">
         {error}
       </div>
-    );
-  }
-
-  if (roadmap.raw) {
-    return (
-      <pre className="whitespace-pre-wrap max-w-4xl mx-auto p-6 bg-white shadow rounded">
-        {roadmap.raw}
-      </pre>
     );
   }
 
